@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import mylogin.classes.User;
 import mylogin.classes.UserService;
+import mylogin.utility.CookieUtility;
 
 /**
  *
@@ -23,6 +24,8 @@ public class LoginServlet extends HttpServlet {
         HttpSession session = request.getSession();
         String username = "";
         String action = request.getParameter("action");
+        
+        
         if (action != null && action.equals("logout")){
             session.setAttribute("user", null);
             request.setAttribute("message", "logged out");
@@ -37,7 +40,13 @@ public class LoginServlet extends HttpServlet {
             }
         }
         
+        if (session.getAttribute("user") != null){
+            response.sendRedirect("home");
+            return;
+        }
+        
         getServletContext().getRequestDispatcher("/WEB-INF/Login.jsp").forward(request, response);
+
     } 
     
     @Override
@@ -58,16 +67,11 @@ public class LoginServlet extends HttpServlet {
                     response.addCookie(cUser);
                 }
                 else {
-                    Cookie [] cookies = request.getCookies();
-                    for (Cookie cookie: cookies){
-                        if (cookie.getName().equals("username")){
-                            cookie.setMaxAge(0);
-                            cookie.setPath("/");
-                            response.addCookie(cookie);
-                        }
-                    }
+                    Cookie cUser = CookieUtility.removeCookie(request.getCookies(), "username");
+                    response.addCookie(cUser);
                 }
                 session.setAttribute("user", user);
+                response.sendRedirect("home");
             } 
             else {
                 request.setAttribute("message", "Invalid username or password.");
